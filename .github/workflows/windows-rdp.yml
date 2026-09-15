@@ -31,41 +31,41 @@ jobs:
           Write-Host "============================================"
           Write-Host ""
 
-          # Start cloudflared and capture output
-          $process = Start-Process -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -NoNewWindow -PassThru -RedirectStandardError "cloudflared.log" -RedirectStandardOutput "cloudflared-out.log"
-          
-          # Wait for the tunnel URL to appear
+          # Start cloudflared and redirect logs
+          Start-Process -FilePath "cloudflared" -ArgumentList "tunnel --url tcp://localhost:3389" -NoNewWindow -RedirectStandardError "cf.log" -RedirectStandardOutput "cf-out.log"
+
+          # Wait and extract the trycloudflare URL
           $url = $null
-          for ($i = 1; $i -le 30; $i++) {
+          for ($i = 1; $i -le 40; $i++) {
             Start-Sleep -Seconds 2
-            if (Test-Path "cloudflared.log") {
-              $content = Get-Content "cloudflared.log" -Raw
-              if ($content -match 'https://[a-zA-Z0-9-]+\.trycloudflare\.com') {
+            if (Test-Path "cf.log") {
+              $log = Get-Content "cf.log" -Raw -ErrorAction SilentlyContinue
+              if ($log -match 'https://[a-zA-Z0-9-]+\.trycloudflare\.com') {
                 $url = $Matches[0]
                 break
               }
             }
           }
 
+          Write-Host ""
           if ($url) {
-            Write-Host ""
             Write-Host "============================================"
-            Write-Host "✅ TUNNEL READY!"
-            Write-Host "Tunnel URL: $url"
-            Write-Host "============================================"
-            Write-Host ""
-            Write-Host "📋 CONNECTION DETAILS:"
-            Write-Host "   USERNAME: runneradmin"
-            Write-Host "   PASSWORD: Yard4rein@."
-            Write-Host "   Computer (after local tunnel): localhost:3389"
+            Write-Host "✅ TUNNEL IS READY!"
+            Write-Host "Tunnel URL → $url"
             Write-Host "============================================"
           } else {
-            Write-Host "⚠️ Could not capture tunnel URL automatically."
-            Write-Host "Check cloudflared.log contents:"
-            Get-Content "cloudflared.log" -ErrorAction SilentlyContinue
+            Write-Host "Could not automatically detect the URL. Full log:"
+            Get-Content "cf.log" -ErrorAction SilentlyContinue
           }
 
-          # Keep the session alive
+          Write-Host ""
+          Write-Host "📋 CONNECTION DETAILS:"
+          Write-Host "   Username : runneradmin"
+          Write-Host "   Password : Yard4rein@."
+          Write-Host "   After starting local cloudflared → connect to localhost:3389"
+          Write-Host "============================================"
+
+          # Keep alive
           while ($true) {
             Start-Sleep -Seconds 60
             Write-Host "✓ Active - $(Get-Date -Format 'HH:mm:ss')"
