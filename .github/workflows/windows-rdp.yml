@@ -7,7 +7,7 @@ jobs:
     timeout-minutes: 350
     steps:
       - uses: AnimMouse/setup-cloudflared@v2
-      - name: Enable RDP + Password
+      - name: Enable RDP + Set Password
         run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
