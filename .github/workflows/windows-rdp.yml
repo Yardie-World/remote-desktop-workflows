@@ -1,33 +1,19 @@
 name: WINDOWS RDP - CLOUDFLARE
-
-on:
-  workflow_dispatch
-
+on: workflow_dispatch
 jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 350
-
     steps:
-      - name: Setup Cloudflared
-        uses: AnimMouse/setup-cloudflared@v2
-
-      - name: Enable Windows RDP
-        run: |
+      - uses: AnimMouse/setup-cloudflared@v2
+      - run: |
           Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
           Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
-          Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-
-      - name: Set Password
-        run: |
           Set-LocalUser -Name "runneradmin" -Password (ConvertTo-SecureString -AsPlainText "Yard4rein@." -Force)
-
-      - name: Start Tunnel
-        run: |
-          Write-Host "Starting Cloudflare Tunnel..."
-          Start-Process cloudflared -ArgumentList "tunnel --url tcp://localhost:3389" -RedirectStandardError "cf.log" -NoNewWindow
-          Start-Sleep -Seconds 15
-          Get-Content cf.log
-          Write-Host "USERNAME: runneradmin"
-          Write-Host "PASSWORD: Yard4rein@."
-          while ($true) { Start-Sleep 60; Write-Host "Still alive $(Get-Date -Format HH:mm:ss)" }
+      - run: |
+          Start-Process cloudflared -ArgumentList "tunnel --url tcp://localhost:3389" -RedirectStandardError cf.log -NoNewWindow
+          Start-Sleep 20
+          type cf.log
+          echo USERNAME: runneradmin
+          echo PASSWORD: Yard4rein@.
+          while ($true) { sleep 60; echo alive }
